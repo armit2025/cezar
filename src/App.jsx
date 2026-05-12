@@ -479,22 +479,22 @@ function App() {
                   <motion.button
                     type="button"
                     className="button-primary"
-                    onClick={handleWhatsApp}
-                    whileHover={{ y: shouldReduceMotion ? 0 : -2 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    Trimite pe WhatsApp
-                    <MessageCircle size={18} />
-                  </motion.button>
-                  <motion.button
-                    type="button"
-                    className="button-secondary"
                     onClick={handleEmail}
                     whileHover={{ y: shouldReduceMotion ? 0 : -2 }}
                     whileTap={{ scale: 0.99 }}
                   >
                     Trimite pe email
                     <Mail size={18} />
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    className="button-secondary whatsapp-action"
+                    onClick={handleWhatsApp}
+                    whileHover={{ y: shouldReduceMotion ? 0 : -2 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    Trimite pe WhatsApp
+                    <MessageCircle size={18} />
                   </motion.button>
                 </div>
 

@@ -272,6 +272,10 @@
   background: #ffffff;
 }
 
+.whatsapp-action {
+  display: none;
+}
+
 .hero-routes {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -825,6 +829,10 @@
   .contact-form .form-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .whatsapp-action {
+    display: inline-flex;
   }
 
   .contact-form .button-primary,
