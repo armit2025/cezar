@@ -1,0 +1,81 @@
+:root {
+  color-scheme: light;
+  --ink: #09121a;
+  --ivory: #f6f2ea;
+  --paper: #ffffff;
+  --muted: #53616c;
+  --line: #d9d2c7;
+  --verdict: #9d2336;
+  --cobalt: #315979;
+  --champagne: #e7c985;
+  --hero-text: #fff8ee;
+  --hero-text-muted: rgba(255, 248, 238, 0.78);
+  --font-display: 'Source Serif 4', Georgia, serif;
+  --font-sans: 'Source Serif 4', Georgia, serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  color: var(--ink);
+  background: var(--ivory);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  border-radius: 0;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(157, 35, 54, 0.2);
+  color: var(--ink);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--champagne);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
