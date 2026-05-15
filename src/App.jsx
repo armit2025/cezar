@@ -1,512 +1,642 @@
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
-  BadgeCheck,
-  BriefcaseBusiness,
-  Clock3,
-  FileSearch,
-  Gavel,
-  Mail,
+  Briefcase,
+  CheckCircle2,
+  Heart,
+  Home,
   MessageCircle,
   PhoneCall,
+  Gavel,
   Scale,
   ShieldCheck,
+  Wallet,
 } from 'lucide-react';
-import {
-  MotionConfig,
-  motion,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from 'motion/react';
-import heroImage from './assets/hero.png';
 import './App.css';
 
 const PHONE_DISPLAY = '0752 176 117';
 const PHONE_RAW = '40752176117';
 const EMAIL_ADDRESS = 'cezar.tanasa@yahoo.com';
 
-const entryRoutes = [
-  {
-    icon: Clock3,
-    title: 'Consultatie urgenta',
-    text: 'Evaluare rapida a contextului si stabilirea pasilor imediati.',
-  },
-  {
-    icon: Gavel,
-    title: 'Litigiu sau disputa',
-    text: 'Analiza pozitiei procesuale, a probelor si a riscurilor previzibile.',
-  },
-  {
-    icon: BriefcaseBusiness,
-    title: 'Consultanta pentru afaceri',
-    text: 'Asistenta pentru contracte, negocieri si decizii comerciale importante.',
-  },
+const trustBullets = [
+  'Îți explic pe înțelesul tău, fără termeni complicați.',
+  'Îți spun clar ce se poate, ce nu se poate și ce este urgent.',
+  'Știi din start ce acte ai nevoie și cât durează, pe scurt.',
 ];
 
-const proofPoints = [
-  'Confidentialitate inca de la primul contact',
-  'Analiza initiala concentrata pe risc si obiectiv',
-  'Recomandari formulate clar si argumentat',
-  'Comunicare directa pe parcursul mandatului',
-];
-
-const practiceAreas = [
+const caseClusters = [
   {
+    id: 'divort',
+    icon: Heart,
+    title: 'Divorț, partaj, copii',
+    lead: 'Divorț la notar sau la instanță, împărțirea bunurilor, pensia de întreținere și programul de vizită al copilului.',
+    tags: [
+      'avocat divorț iași',
+      'partaj apartament',
+      'partaj bunuri comune',
+      'pensia alimentară',
+      'custodia copilului',
+      'divorț cu copil',
+    ],
+    fill: 'Am nevoie de ajutor la divorț / partaj / pensie alimentară / copil. ',
+  },
+  {
+    id: 'executare',
     icon: Scale,
-    title: 'Litigii civile si comerciale',
-    text: 'Reprezentare in conflicte contractuale, comerciale si patrimoniale, cu accent pe strategie procesuala si administrarea probelor.',
+    title: 'Executare silită, datorii, popriri',
+    lead: 'Acte de la executor, poprire pe salariu, contestație la executare, rate la bancă sau IFN.',
+    tags: [
+      'executare silită',
+      'contestație la executare',
+      'poprire salariu',
+      'nu mai pot plăti creditul',
+      'datorii la bancă',
+      'recuperare datorii',
+    ],
+    fill: 'Am primit acte de executare silită / poprire / datorii la bancă sau IFN. ',
   },
   {
+    id: 'pensie',
     icon: ShieldCheck,
-    title: 'Drept penal',
-    text: 'Asistenta si aparare in cauze penale, cu atentie la drepturile clientului, reputatie si fiecare etapa procedurala.',
+    title: 'Pensie de întreținere neplătită',
+    lead: 'Stabilire, modificare, recuperare pensie alimentară sau apărare dacă nu mai poți plăti.',
+    tags: [
+      'pensie alimentară neplătită',
+      'recuperare pensie alimentară',
+      'calcul pensie alimentară',
+      'executare pensie alimentară',
+    ],
+    fill: 'Problemă cu pensia alimentară (stabilire, neplată sau recuperare). ',
   },
   {
-    icon: BriefcaseBusiness,
-    title: 'Societar si contractual',
-    text: 'Consultanta pentru societati, contracte, negocieri si decizii care necesita predictibilitate juridica.',
+    id: 'chirie',
+    icon: Home,
+    title: 'Chirie, evacuare, locuință',
+    lead: 'Contract de închiriere, evacuare, garanție nereturnată, datorii la chirie sau întreținere.',
+    tags: [
+      'evacuare chiriaș',
+      'drepturile chiriașului',
+      'garanție chirie',
+      'datorii chirie',
+      'avocat chirie iași',
+    ],
+    fill: 'Problemă cu chiria / evacuare / garanție / întreținere. ',
   },
   {
-    icon: FileSearch,
-    title: 'Executari si masuri urgente',
-    text: 'Interventii in proceduri de executare, masuri provizorii si situatii in care timpul influenteaza rezultatul.',
+    id: 'munca',
+    icon: Briefcase,
+    title: 'Salariu, concediere, loc de muncă',
+    lead: 'Salariu neplătit, concediere abuzivă, ore suplimentare, conflicte cu angajatorul.',
+    tags: [
+      'concediere abuzivă',
+      'salariu neplătit',
+      'recuperare salarii',
+      'avocat dreptul muncii iași',
+    ],
+    fill: 'Problemă la serviciu (salariu, concediere, abuz). ',
+  },
+  {
+    id: 'penal',
+    icon: Gavel,
+    title: 'Amenzi, dosar penal, citări',
+    lead: 'Contestație la amendă, citație, anchetă sau dosar penal – ce înseamnă și ce poți face mai departe.',
+    tags: [
+      'contestație amendă',
+      'dosar penal',
+      'avocat penal iași',
+      'citație poliție',
+    ],
+    fill: 'Am primit o amendă sau o citație / am un dosar penal. ',
   },
 ];
 
-const methodSteps = [
+const quickPaths = [
   {
-    step: '01',
-    title: 'Analiza initiala',
-    text: 'Identificarea documentelor relevante, a termenelor, a riscurilor si a obiectivului realist al clientului.',
+    title: 'Vreau să divorțez',
+    text: 'Divorț la notar sau la instanță, cu sau fără copii.',
+    fill: 'Vreau să divorțez. ',
+    situatie: 'divort',
   },
   {
-    step: '02',
-    title: 'Strategie juridica',
-    text: 'Stabilirea directiei de actiune, a argumentelor principale si a alternativelor procedurale disponibile.',
+    title: 'Partaj apartament sau casă',
+    text: 'Împărțirea bunurilor după divorț sau separare.',
+    fill: 'Am nevoie de partaj (apartament / casă / bunuri comune). ',
+    situatie: 'divort',
   },
   {
-    step: '03',
-    title: 'Reprezentare',
-    text: 'Redactarea actelor, comunicarea cu partile implicate si sustinerea pozitiei clientului in fata autoritatilor sau instantelor.',
+    title: 'Pensie de întreținere sau copil',
+    text: 'Stabilire, mărire, reducere sau neplată.',
+    fill: 'Problemă cu pensia alimentară sau custodia copilului. ',
+    situatie: 'pensie',
+  },
+  {
+    title: 'Executare silită sau poprire',
+    text: 'Acte de la executor, poprire pe salariu sau cont.',
+    fill: 'Am primit acte de executare silită / poprire / de la executor. ',
+    situatie: 'executare',
+  },
+  {
+    title: 'Nu mai pot plăti creditul',
+    text: 'Rate la bancă, IFN, amenințări de recuperare.',
+    fill: 'Nu mai pot plăti creditul / am datorii la bancă sau IFN. ',
+    situatie: 'executare',
+  },
+  {
+    title: 'Probleme cu chiria',
+    text: 'Evacuare, garanție, contract, datorii la chirie.',
+    fill: 'Problemă cu chiria (evacuare, garanție, contract). ',
+    situatie: 'chirie',
+  },
+  {
+    title: 'Concediere sau salariu neplătit',
+    text: 'Concediere, salarii restante, abuz la locul de muncă.',
+    fill: 'Problemă la serviciu: concediere, salariu neplătit sau conflict cu angajatorul. ',
+    situatie: 'munca',
+  },
+  {
+    title: 'Amendă sau dosar penal',
+    text: 'Contestație, citație, anchetă penală.',
+    fill: 'Am primit o amendă sau o citație / am dosar penal. ',
+    situatie: 'penal',
+  },
+  {
+    title: 'Moștenire sau succesiune',
+    text: 'Împărțirea moștenirii, certificate, conflicte între moștenitori.',
+    fill: 'Problemă cu moștenirea / succesiunea. ',
+    situatie: 'mostenire',
   },
 ];
 
-const contactChannels = [
+const faqItems = [
   {
-    label: 'Telefon',
-    value: PHONE_DISPLAY,
-    href: `tel:+${PHONE_RAW}`,
+    q: 'Cât costă o consultație sau un divorț?',
+    a: 'Depinde de tipul cauzei (divorț amiabil, contencios, executare silită etc.) și de actele existente. Descrie pe scurt situația și îți explic cum procedăm și ce implică, înainte de orice pas.',
   },
   {
-    label: 'Email',
-    value: EMAIL_ADDRESS,
-    href: `mailto:${EMAIL_ADDRESS}`,
+    q: 'Cât durează un divorț în România?',
+    a: 'Divorțul amiabil fără copii poate dura circa 30 de zile la starea civilă. La notar, în jur de 30–45 de zile. Divorțul la instanță (contencios), cu copii sau partaj litigios, poate dura 12–24 de luni sau mai mult.',
   },
   {
-    label: 'Programari',
-    value: 'Iasi, cu programare prealabila',
+    q: 'Ce este executarea silită și ce pot face?',
+    a: 'Executarea silită înseamnă că un creditor își recuperează banii prin executor judecătoresc (poprire pe salariu, sechestru pe bunuri etc.). Poți verifica dacă actele sunt legale, dacă termenele sunt respectate și poți depune contestație la executare în termenul legal (de regulă, 15 zile de la comunicare).',
+  },
+  {
+    q: 'Ce se întâmplă dacă nu mai plătesc creditul?',
+    a: 'Banca sau IFN poate trimite somații, raporta la Biroul de Credit și, ulterior, declanșa executarea silită. Cu cât reacționezi mai devreme, cu atât ai mai multe opțiuni (negociere, contestație, restructurare).',
+  },
+  {
+    q: 'Cum se calculează pensia de întreținere?',
+    a: 'Instanța stabilește pensia în funcție de veniturile părintelui obligat și nevoile copilului. Orientativ, din venitul net: până la 1/4 pentru un copil, 1/3 pentru doi, 1/2 pentru trei sau mai mulți. Dacă părintele nu are venit declarat, se poate folosi salariul minim pe economie.',
+  },
+  {
+    q: 'Ce fac dacă nu îmi plătește pensia de întreținere?',
+    a: 'Poți solicita executarea silită (poprire, sechestru). După 3 luni de neplată continuă, neplata poate deveni și infracțiune (abandon de familie). Un avocat te ajută să recuperezi sumele și să urmezi procedura corect.',
+  },
+  {
+    q: 'Cum se face partajul după divorț?',
+    a: 'Bunurile dobândite în timpul căsătoriei sunt, de regulă, împărțite în mod egal, dar pot exista excepții dacă un soț dovedește o contribuție mai mare. Partajul poate fi amiabil (la notar) sau judiciar (la instanță).',
+  },
+  {
+    q: 'Pot opri o executare silită pe apartamentul familiei?',
+    a: 'Depinde dacă datoria este personală sau de familie, dacă bunul este comun și dacă s-au respectat procedurile. În multe situații, soțul neîndatorat poate contesta executarea sau cere partajul prealabil.',
+  },
+  {
+    q: 'Am fost concediat – ce drepturi am?',
+    a: 'Verificăm dacă concedierea este legală, dacă ai primit salariile și drepturile la zi și ce poți contesta. Termenele sunt scurte, deci este bine să nu amâni.',
+  },
+  {
+    q: 'Proprietarul vrea să mă evacueze – ce fac?',
+    a: 'Depinde de contract, de motive și de modul în care ți s-a comunicat. Evacuarea nelegală se poate contesta. Îți explic pas cu pas ce acte ai și ce poți face.',
+  },
+  {
+    q: 'Dacă nu am multe acte, mai are rost să sun?',
+    a: 'Da. Uneori primul pas este să aflăm ce acte lipsesc și cum le poți obține (de la instanță, executor, angajator sau bancă). Poți trimite poze pe WhatsApp.',
+  },
+  {
+    q: 'Îmi poți spune dacă câștig cauza?',
+    a: 'Îți spun ce șanse există după ce înțeleg situația și văd documentele. Dacă nu este realist, îți spun direct – fără promisiuni goale.',
   },
 ];
 
-function CabinetLogo() {
+const situatieOptions = [
+  { value: '', label: 'Alege tipul problemei (opțional)' },
+  ...caseClusters.map((c) => ({ value: c.id, label: c.title })),
+  { value: 'mostenire', label: 'Moștenire sau succesiune' },
+  { value: 'altceva', label: 'Altceva' },
+];
+
+function Topbar() {
   return (
-    <svg
-      className="brand-logo"
-      viewBox="0 0 72 72"
-      role="img"
-      aria-labelledby="cabinet-logo-title"
-    >
-      <title id="cabinet-logo-title">Logo Tanasa Cezar-Dumitru</title>
-      <rect className="logo-field" x="5" y="5" width="62" height="62" rx="2" />
-      <path className="logo-rule" d="M18 18h36M18 54h36" />
-      <path className="logo-divider" d="M36 16v40" />
-      <text className="logo-letter logo-letter-left" x="26" y="43" textAnchor="middle">
-        T
-      </text>
-      <text className="logo-letter logo-letter-right" x="46" y="43" textAnchor="middle">
-        C
-      </text>
-    </svg>
+    <header className="v2-topbar">
+      <a className="v2-brand" href="#top" aria-label="Acasă">
+        <span className="v2-mark" aria-hidden="true">
+          TC
+        </span>
+        <span className="v2-brand-copy">
+          <strong>Tanasa Cezar-Dumitru</strong>
+          <span>Avocat în Iași</span>
+        </span>
+      </a>
+
+      <nav className="v2-nav" aria-label="Navigație">
+        <a href="#cazuri">Cazuri</a>
+        <a href="#alege">Alege situația</a>
+        <a href="#intrebari">Întrebări</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <a className="v2-call" href={`tel:+${PHONE_RAW}`}>
+        <PhoneCall size={18} />
+        <span>{PHONE_DISPLAY}</span>
+      </a>
+    </header>
   );
 }
 
-function App() {
-  const shouldReduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll();
-  const progressScaleX = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 24,
-    mass: 0.2,
-  });
-  const heroImageY = useTransform(scrollYProgress, [0, 0.35], ['0%', shouldReduceMotion ? '0%' : '8%']);
+function formatWhatsAppText({ nume, telefon, situatie, problema, cand, localitate }) {
+  const lines = [
+    'Bună ziua.',
+    `Mă numesc ${nume}.`,
+    telefon ? `Telefon: ${telefon}.` : null,
+    situatie ? `Tip problemă: ${situatie}.` : null,
+    `Problemă: ${problema}.`,
+    `Când: ${cand}.`,
+    `Localitate: ${localitate}.`,
+    'Aș dori o primă discuție, ca să înțeleg ce pot face.',
+  ].filter(Boolean);
+  return lines.join(' ');
+}
 
-  const [formData, setFormData] = useState({
+function buildMailTo({ nume, telefon, situatie, problema, cand, localitate }) {
+  const subject = `Solicitare avocat Iași - ${nume}`;
+  const body = [
+    `Nume: ${nume}`,
+    telefon ? `Telefon: ${telefon}` : null,
+    situatie ? `Tip problemă: ${situatie}` : null,
+    `Descriere: ${problema}`,
+    `Când s-a întâmplat: ${cand}`,
+    `Localitate: ${localitate}`,
+    '',
+    'Vă rog să îmi spuneți care sunt pașii următori și ce acte trebuie să pregătesc.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return `mailto:${EMAIL_ADDRESS}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function App() {
+  const contactRef = useRef(null);
+  const [form, setForm] = useState({
     nume: '',
     telefon: '',
-    email: '',
-    speta: '',
+    situatie: '',
+    problema: '',
+    cand: '',
+    localitate: 'Iași',
   });
-  const [feedback, setFeedback] = useState({ type: '', message: '' });
+  const [status, setStatus] = useState({ kind: 'idle', message: '' });
 
-  const revealProps = (delay = 0) => ({
-    initial: { opacity: 0, y: shouldReduceMotion ? 0 : 24 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.2 },
-    transition: {
-      duration: 0.55,
-      delay,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  });
+  const isValid = useMemo(
+    () =>
+      form.nume.trim() &&
+      form.problema.trim() &&
+      form.cand.trim() &&
+      form.localitate.trim(),
+    [form],
+  );
 
-  const handleChange = ({ target: { name, value } }) => {
-    setFormData((current) => ({
+  const situatieLabel = useMemo(() => {
+    const found = situatieOptions.find((o) => o.value === form.situatie);
+    return found?.value ? found.label : '';
+  }, [form.situatie]);
+
+  const updateField = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+    if (status.kind !== 'idle') setStatus({ kind: 'idle', message: '' });
+  };
+
+  const scrollToContact = () => {
+    contactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const quickFill = (fillText, situatieId) => {
+    setForm((current) => ({
       ...current,
-      [name]: value,
+      problema: fillText,
+      situatie: situatieId,
     }));
-
-    if (feedback.message) {
-      setFeedback({ type: '', message: '' });
-    }
+    if (status.kind !== 'idle') setStatus({ kind: 'idle', message: '' });
+    scrollToContact();
   };
 
-  const buildContactPayload = () => {
-    const sanitizedData = {
-      nume: formData.nume.trim(),
-      telefon: formData.telefon.trim(),
-      email: formData.email.trim(),
-      speta: formData.speta.trim(),
-    };
-
-    if (Object.values(sanitizedData).some((value) => !value)) {
-      setFeedback({
-        type: 'error',
-        message: 'Completeaza toate campurile inainte de trimitere.',
-      });
-      return null;
-    }
-
-    const subject = `Solicitare evaluare initiala - ${sanitizedData.nume}`;
-    const emailBody = [
-      `Nume: ${sanitizedData.nume}`,
-      `Telefon: ${sanitizedData.telefon}`,
-      `Email: ${sanitizedData.email}`,
-      '',
-      'Context:',
-      sanitizedData.speta,
-    ].join('\n');
-    const whatsappBody = [
-      'Buna ziua.',
-      `Numele meu este ${sanitizedData.nume}.`,
-      `Telefon: ${sanitizedData.telefon}.`,
-      `Email: ${sanitizedData.email}.`,
-      `Context: ${sanitizedData.speta}`,
-    ].join(' ');
-
-    return { subject, emailBody, whatsappBody };
-  };
-
-  const handleWhatsApp = (event) => {
-    event.preventDefault();
-    const payload = buildContactPayload();
-
-    if (!payload) {
+  const handleWhatsApp = () => {
+    if (!isValid) {
+      setStatus({ kind: 'error', message: 'Completează numele, descrierea, momentul și localitatea.' });
       return;
     }
-
-    setFeedback({ type: 'success', message: 'Se deschide WhatsApp cu datele completate.' });
-    window.open(
-      `https://wa.me/${PHONE_RAW}?text=${encodeURIComponent(payload.whatsappBody)}`,
-      '_blank',
-      'noopener,noreferrer',
-    );
+    const text = formatWhatsAppText({
+      nume: form.nume.trim(),
+      telefon: form.telefon.trim(),
+      situatie: situatieLabel,
+      problema: form.problema.trim(),
+      cand: form.cand.trim(),
+      localitate: form.localitate.trim(),
+    });
+    setStatus({ kind: 'success', message: 'Se deschide WhatsApp cu mesajul pregătit.' });
+    window.open(`https://wa.me/${PHONE_RAW}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
-  const handleEmail = (event) => {
-    event.preventDefault();
-    const payload = buildContactPayload();
-
-    if (!payload) {
+  const handleEmail = () => {
+    if (!isValid) {
+      setStatus({ kind: 'error', message: 'Completează numele, descrierea, momentul și localitatea.' });
       return;
     }
-
-    setFeedback({ type: 'success', message: 'Se deschide emailul cu solicitarea pregatita.' });
-    window.location.href =
-      `mailto:${EMAIL_ADDRESS}?subject=${encodeURIComponent(payload.subject)}` +
-      `&body=${encodeURIComponent(payload.emailBody)}`;
+    setStatus({ kind: 'success', message: 'Se deschide emailul cu mesajul pregătit.' });
+    window.location.href = buildMailTo({
+      nume: form.nume.trim(),
+      telefon: form.telefon.trim(),
+      situatie: situatieLabel,
+      problema: form.problema.trim(),
+      cand: form.cand.trim(),
+      localitate: form.localitate.trim(),
+    });
   };
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="site-shell">
-        <motion.div
-          className="scroll-progress"
-          style={{ scaleX: progressScaleX }}
-          aria-hidden="true"
-        />
+    <div className="v2-shell" id="top">
+      <Topbar />
 
-        <header className="topbar">
-          <a className="brand-mark" href="#top" aria-label="Acasa">
-            <CabinetLogo />
-            <span className="brand-copy">
-              <strong>Tanasa Cezar-Dumitru</strong>
-              <span>Cabinet de avocat</span>
-            </span>
-          </a>
-          <nav className="topnav" aria-label="Navigatie principala">
-            <a href="#abordare">Abordare</a>
-            <a href="#expertiza">Expertiza</a>
-            <a href="#metoda">Metoda</a>
-            <a href="#contact">Contact</a>
-          </nav>
-          <a className="topbar-action" href={`tel:+${PHONE_RAW}`}>
-            <PhoneCall size={17} />
-            {PHONE_DISPLAY}
-          </a>
-        </header>
+      <main className="v2-main">
+        <section className="v2-hero">
+          <div className="v2-container v2-hero-grid">
+            <div className="v2-hero-copy">
+              <p className="v2-kicker">
+                <ShieldCheck size={18} />
+                Avocat în Iași – divorț, executare silită, datorii, muncă
+              </p>
+              <h1>Ajutor juridic pe înțelesul tău, fără termeni complicați</h1>
+              <p className="v2-lead">
+                Dacă ai probleme cu <strong>divorțul</strong>, <strong>partajul</strong>,{' '}
+                <strong>executarea silită</strong>, <strong>pensia alimentară</strong>, chiria sau salariul, îți
+                explic clar ce înseamnă actele primite și care sunt pașii următori.
+              </p>
 
-        <main>
-          <section className="hero" id="top">
-            <motion.img
-              className="hero-image"
-              src={heroImage}
-              alt="Cabinet de avocat cu atmosfera executiva"
-              style={{ y: heroImageY }}
-            />
-            <div className="hero-scrim" />
+              <div className="v2-hero-actions">
+                <a className="v2-btn v2-btn-whatsapp" href={`https://wa.me/${PHONE_RAW}`}>
+                  Scrie pe WhatsApp
+                  <MessageCircle size={18} />
+                </a>
+                <a className="v2-btn v2-btn-primary" href="#contact">
+                  Completează formularul
+                  <ArrowRight size={18} />
+                </a>
+                <a className="v2-btn v2-btn-ghost" href={`tel:+${PHONE_RAW}`}>
+                  Sună acum
+                  <PhoneCall size={18} />
+                </a>
+              </div>
 
-            <div className="hero-content">
-              <motion.div className="hero-main" {...revealProps()}>
-                <span className="eyebrow">Cabinet de avocat | Iasi</span>
-                <h1>Tanasa D. Cezar-Dumitru</h1>
-                <p>
-                  Asistenta si reprezentare juridica pentru cauze civile, comerciale si penale,
-                  cu o abordare discreta, riguroasa si orientata catre solutii concrete.
-                </p>
-
-                <div className="hero-actions">
-                  <motion.a
-                    className="button-primary"
-                    href="#contact"
-                    whileHover={{ y: shouldReduceMotion ? 0 : -2 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    Solicita evaluare
-                    <ArrowRight size={18} />
-                  </motion.a>
-                </div>
-              </motion.div>
-
-              <motion.div className="hero-routes" {...revealProps(0.12)}>
-                {entryRoutes.map((route, index) => {
-                  const Icon = route.icon;
-
-                  return (
-                    <a className="route-tile" href="#contact" key={route.title}>
-                      <span className="route-index">0{index + 1}</span>
-                      <Icon size={19} />
-                      <strong>{route.title}</strong>
-                      <span>{route.text}</span>
-                    </a>
-                  );
-                })}
-              </motion.div>
-            </div>
-          </section>
-
-          <section className="proof-band" id="abordare">
-            <div className="section-frame">
-              <motion.div className="proof-intro" {...revealProps()}>
-                <span className="eyebrow dark">Standardul initial</span>
-                <h2>O cauza juridica importanta are nevoie de claritate inainte de actiune.</h2>
-              </motion.div>
-
-              <motion.div className="proof-grid" {...revealProps(0.1)}>
-                {proofPoints.map((point) => (
-                  <div className="proof-item" key={point}>
-                    <BadgeCheck size={18} />
-                    <span>{point}</span>
+              <div className="v2-trust">
+                {trustBullets.map((item) => (
+                  <div className="v2-trust-item" key={item}>
+                    <CheckCircle2 size={18} />
+                    <span>{item}</span>
                   </div>
                 ))}
-              </motion.div>
-            </div>
-          </section>
-
-          <section className="practice-section" id="expertiza">
-            <div className="section-frame">
-              <motion.div className="section-heading" {...revealProps()}>
-                <span className="eyebrow dark">Expertiza</span>
-                <h2>Arii de practica pentru mandate in care analiza si tactica fac diferenta.</h2>
-              </motion.div>
-
-              <div className="practice-list">
-                {practiceAreas.map((area, index) => {
-                  const Icon = area.icon;
-
-                  return (
-                    <motion.article
-                      className="practice-row"
-                      key={area.title}
-                      {...revealProps(index * 0.05 + 0.06)}
-                    >
-                      <span className="practice-number">0{index + 1}</span>
-                      <Icon size={22} />
-                      <div>
-                        <h3>{area.title}</h3>
-                        <p>{area.text}</p>
-                      </div>
-                    </motion.article>
-                  );
-                })}
               </div>
             </div>
-          </section>
 
-          <section className="method-section" id="metoda">
-            <div className="section-frame method-layout">
-              <motion.div className="method-copy" {...revealProps()}>
-                <span className="eyebrow dark">Metoda</span>
-                <h2>Fiecare dosar este abordat prin analiza, strategie si executie.</h2>
-                <p>
-                  Inaintea oricarei interventii, stabilim contextul juridic, riscurile relevante
-                  si modul in care fiecare pas sustine interesul clientului.
-                </p>
-              </motion.div>
+            <aside className="v2-hero-card" aria-label="Cum funcționează">
+              <h2>În 3 pași simpli</h2>
+              <ol className="v2-steps">
+                <li>
+                  <strong>Îmi spui situația.</strong>
+                  <span>Divorț, datorii, executare, muncă – pe scurt.</span>
+                </li>
+                <li>
+                  <strong>Îți explic ce înseamnă.</strong>
+                  <span>Ce risc ai, ce termene ai, ce acte contează.</span>
+                </li>
+                <li>
+                  <strong>Stabilim următorul pas.</strong>
+                  <span>Contestație, divorț, negociere – concret.</span>
+                </li>
+              </ol>
+            </aside>
+          </div>
+        </section>
 
-              <div className="method-steps">
-                {methodSteps.map((step, index) => (
-                  <motion.article className="method-step" key={step.step} {...revealProps(index * 0.07)}>
-                    <span>{step.step}</span>
-                    <div>
-                      <h3>{step.title}</h3>
-                      <p>{step.text}</p>
+        <section className="v2-section v2-cases" id="cazuri">
+          <div className="v2-container">
+            <header className="v2-section-head">
+              <h2>Cazuri frecvente în care te pot ajuta în Iași</h2>
+              <p>
+                Acestea sunt problemele juridice cel mai des întâlnite. Alege domeniul care te privește și
+                completează formularul – sau sună direct.
+              </p>
+            </header>
+
+            <div className="v2-cluster-grid">
+              {caseClusters.map((cluster) => {
+                const Icon = cluster.icon;
+                return (
+                  <article className="v2-cluster" key={cluster.id}>
+                    <div className="v2-cluster-head">
+                      <span className="v2-cluster-icon" aria-hidden="true">
+                        <Icon size={22} />
+                      </span>
+                      <h3>{cluster.title}</h3>
                     </div>
-                  </motion.article>
-                ))}
+                    <p className="v2-cluster-lead">{cluster.lead}</p>
+                    <ul className="v2-tags" aria-label="Subiecte frecvente">
+                      {cluster.tags.map((tag) => (
+                        <li key={tag}>{tag}</li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      className="v2-cluster-cta"
+                      onClick={() => quickFill(cluster.fill, cluster.id)}
+                    >
+                      Am nevoie de ajutor aici
+                      <ArrowRight size={16} />
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="v2-section v2-quick" id="alege">
+          <div className="v2-container">
+            <header className="v2-section-head">
+              <h2>Alege situația ta (un singur click)</h2>
+              <p>Se completează automat mesajul în formular. Poți adăuga detalii după.</p>
+            </header>
+
+            <div className="v2-quickpaths">
+              {quickPaths.map((item) => (
+                <button
+                  type="button"
+                  className="v2-quickpath"
+                  key={item.title}
+                  onClick={() => quickFill(item.fill, item.situatie)}
+                >
+                  <strong>{item.title}</strong>
+                  <span>{item.text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="v2-section v2-faq" id="intrebari">
+          <div className="v2-container">
+            <header className="v2-section-head">
+              <h2>Întrebări frecvente (divorț, executare, pensie, muncă)</h2>
+              <p>Răspunsuri scurte, ca să știi la ce să te aștepți înainte să suni.</p>
+            </header>
+
+            <div className="v2-faq-grid">
+              {faqItems.map((item) => (
+                <details key={item.q}>
+                  <summary>{item.q}</summary>
+                  <p>{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="v2-section v2-contact" id="contact" ref={contactRef}>
+          <div className="v2-container v2-contact-grid">
+            <div className="v2-contact-copy">
+              <h2>Scrie-mi – îți răspund cu pașii următori</h2>
+              <p>
+                WhatsApp este cel mai rapid: poți trimite poze cu actele (executare silită, somație, concediere,
+                hotărâre de divorț). Sună dacă preferi să vorbim la telefon.
+              </p>
+
+              <div className="v2-contact-cards">
+                <a className="v2-contact-card v2-contact-card-whatsapp" href={`https://wa.me/${PHONE_RAW}`}>
+                  <span>WhatsApp</span>
+                  <strong>Scrie acum</strong>
+                </a>
+                <a className="v2-contact-card" href={`tel:+${PHONE_RAW}`}>
+                  <span>Telefon</span>
+                  <strong>{PHONE_DISPLAY}</strong>
+                </a>
               </div>
+
+              <p className="v2-contact-note">
+                <Wallet size={16} aria-hidden="true" />
+                Discutăm costurile după ce înțeleg situația – fără costuri ascunse.
+              </p>
             </div>
-          </section>
 
-          <section className="contact-section" id="contact">
-            <div className="section-frame contact-layout">
-              <motion.div className="contact-copy" {...revealProps()}>
-                <span className="eyebrow">Contact</span>
-                <h2>Solicita o evaluare initiala a situatiei tale juridice.</h2>
-                <p>
-                  Transmite pe scurt contextul, datele de contact si obiectivul urmarit. Daca
-                  situatia permite preluarea mandatului, discutia continua in mod direct.
-                </p>
+            <form className="v2-form" onSubmit={(e) => e.preventDefault()}>
+              <label className="v2-field">
+                <span>Numele tău</span>
+                <input
+                  name="nume"
+                  value={form.nume}
+                  onChange={updateField}
+                  autoComplete="name"
+                  required
+                  placeholder="Ex: Ion Popescu"
+                />
+              </label>
 
-                <div className="contact-channels">
-                  {contactChannels.map((channel) => {
-                    const content = channel.href ? (
-                      <a href={channel.href}>{channel.value}</a>
-                    ) : (
-                      <span>{channel.value}</span>
-                    );
+              <label className="v2-field">
+                <span>Telefon (recomandat)</span>
+                <input
+                  name="telefon"
+                  type="tel"
+                  value={form.telefon}
+                  onChange={updateField}
+                  autoComplete="tel"
+                  placeholder="Ex: 07xx xxx xxx"
+                />
+              </label>
 
-                    return (
-                      <div className="contact-channel" key={channel.label}>
-                        <strong>{channel.label}</strong>
-                        {content}
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
+              <label className="v2-field">
+                <span>Tipul problemei</span>
+                <select name="situatie" value={form.situatie} onChange={updateField}>
+                  {situatieOptions.map((opt) => (
+                    <option key={opt.value || 'empty'} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-              <motion.form className="contact-form" {...revealProps(0.1)}>
-                <div className="field-grid">
-                  <label className="field" htmlFor="nume">
-                    <span>Nume complet</span>
-                    <input
-                      id="nume"
-                      type="text"
-                      name="nume"
-                      value={formData.nume}
-                      onChange={handleChange}
-                      autoComplete="name"
-                      required
-                    />
-                  </label>
+              <label className="v2-field">
+                <span>Ce s-a întâmplat? (pe scurt)</span>
+                <textarea
+                  name="problema"
+                  value={form.problema}
+                  onChange={updateField}
+                  rows={5}
+                  required
+                  placeholder="Ex: Am primit poprire pe salariu / Vreau să divorțez / Partaj apartament..."
+                />
+              </label>
 
-                  <label className="field" htmlFor="telefon">
-                    <span>Telefon</span>
-                    <input
-                      id="telefon"
-                      type="tel"
-                      name="telefon"
-                      value={formData.telefon}
-                      onChange={handleChange}
-                      autoComplete="tel"
-                      required
-                    />
-                  </label>
-                </div>
-
-                <label className="field" htmlFor="email">
-                  <span>Email</span>
+              <div className="v2-field-row">
+                <label className="v2-field">
+                  <span>Când</span>
                   <input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    autoComplete="email"
+                    name="cand"
+                    value={form.cand}
+                    onChange={updateField}
                     required
+                    placeholder="Ex: săptămâna trecută"
                   />
                 </label>
-
-                <label className="field" htmlFor="speta">
-                  <span>Contextul spetei</span>
-                  <textarea
-                    id="speta"
-                    name="speta"
-                    value={formData.speta}
-                    onChange={handleChange}
-                    rows="7"
+                <label className="v2-field">
+                  <span>Localitate</span>
+                  <input
+                    name="localitate"
+                    value={form.localitate}
+                    onChange={updateField}
                     required
+                    placeholder="Ex: Iași"
                   />
                 </label>
+              </div>
 
-                <p className="field-hint">
-                  Include pe scurt stadiul cauzei, documentele existente si rezultatul urmarit.
-                </p>
+              <div className="v2-form-actions">
+                <button type="button" className="v2-btn v2-btn-whatsapp" onClick={handleWhatsApp}>
+                  Trimite pe WhatsApp
+                  <MessageCircle size={18} />
+                </button>
+                <button type="button" className="v2-btn v2-btn-secondary" onClick={handleEmail}>
+                  Trimite pe email
+                  <ArrowRight size={18} />
+                </button>
+              </div>
 
-                <div className="form-actions">
-                  <motion.button
-                    type="button"
-                    className="button-primary"
-                    onClick={handleEmail}
-                    whileHover={{ y: shouldReduceMotion ? 0 : -2 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    Trimite pe email
-                    <Mail size={18} />
-                  </motion.button>
-                  <motion.button
-                    type="button"
-                    className="button-secondary whatsapp-action"
-                    onClick={handleWhatsApp}
-                    whileHover={{ y: shouldReduceMotion ? 0 : -2 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    Trimite pe WhatsApp
-                    <MessageCircle size={18} />
-                  </motion.button>
-                </div>
+              <p className={`v2-form-status v2-form-status-${status.kind}`} aria-live="polite">
+                {status.kind === 'idle'
+                  ? 'Confidențial. Mesajul nu reprezintă consultanță juridică până analizăm actele.'
+                  : status.message}
+              </p>
+            </form>
+          </div>
+        </section>
+      </main>
 
-                <p className={`form-feedback ${feedback.type}`} aria-live="polite">
-                  {feedback.message || 'Datele sunt folosite exclusiv pentru initierea discutiei.'}
-                </p>
-              </motion.form>
-            </div>
-          </section>
-        </main>
-      </div>
-    </MotionConfig>
+      <footer className="v2-footer">
+        <div className="v2-container v2-footer-inner">
+          <p>
+            Cabinet de avocat Tanasa Cezar-Dumitru – Iași. Divorț, partaj, executare silită, pensie alimentară,
+            dreptul muncii, penal.
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 }
 
